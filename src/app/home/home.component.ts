@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { FoodItemService } from '../food-item.service';
 
 @Component({
   selector: 'app-home',
@@ -10,12 +11,18 @@ import { Router } from '@angular/router';
 })
 export class HomeComponent {
   searchQuery: string = "";
-  constructor(private router: Router) {}
+  foodItems: any[] = [];
+
+  constructor(private router: Router,private foodItemService: FoodItemService) {}
   onSearch() {
     if (this.searchQuery.trim()) {
       this.router.navigate(['/items'], { queryParams: { search: this.searchQuery } });
     }
   }
-
+  ngOnInit(): void {
+    this.foodItemService.getFoodItems().subscribe(data => {
+      this.foodItems = data;
+    });
+  }
 
 }

@@ -1,9 +1,4 @@
-<div class="home-container">
-  <form (ngSubmit)="onSearch()">
-    <mat-form-field appearance="fill">
-      <mat-label>Search for Food Items</mat-label>
-      <input matInput [(ngModel)]="searchQuery" name="searchQuery" required />
-    </mat-form-field>
-    <button mat-raised-button color="primary" type="submit">Search</button>
-  </form>
+<div *ngFor="let item of foodItems">
+  <h3>{{ item.name }}</h3>
+  <p>Price: {{ item.price }}</p>
 </div>
