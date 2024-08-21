@@ -1,0 +1,9 @@
+<div class="home-container">
+  <form (ngSubmit)="onSearch()">
+    <mat-form-field appearance="fill">
+      <mat-label>Search for Food Items</mat-label>
+      <input matInput [(ngModel)]="searchQuery" name="searchQuery" required />
+    </mat-form-field>
+    <button mat-raised-button color="primary" type="submit">Search</button>
+  </form>
+</div>
