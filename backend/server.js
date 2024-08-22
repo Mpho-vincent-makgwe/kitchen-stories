@@ -1,8 +1,8 @@
 const express = require('express');
-const mongoose = require('mongoose');
+const { MongoClient } = require('mongodb');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const FoodItem = require('./models/foodItems.model.ts');
+const multer = require('multer');
 
 const app = express();
 
@@ -10,52 +10,102 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+// MongoDB connection string
+const mongoURI = 'mongodb+srv://mphomakgwe4:cB2NeXeIwUKtmMVY@kitchen-stories.lnty9.mongodb.net/mydatabase?retryWrites=true&w=majority';
+const DATABASEName = "Angular";
+const COLLECTIONName = "kitchen-stories"; // Define your collection name here
+const COLLECTIONNAME2 = "dishes"; // Define your collection name here
+
+
+const storage = multer.memoryStorage(); // Store files in memory (useful for small files)
+const upload = multer({ storage });
+
 // MongoDB connection
 const connectDB = async () => {
-    try {
-        await mongoose.connect('mongodb+srv://mphomakgwe4:cB2NeXeIwUKtmMVY@kitchen-stories.lnty9.mongodb.net/kitchen-stories', {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
-        console.log('MongoDB connected');
-    } catch (err) {
-        console.error(err.message);
-        process.exit(1);
+  let client;
+
+  try {
+    // Connect to MongoDB
+    client = await MongoClient.connect(mongoURI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('Connected to MongoDB successfully');
+
+    const database = client.db(DATABASEName);
+    const collection = database.collection(COLLECTIONName);
+
+    // Fetch data from the collection
+    const data = await collection.find({}).toArray();
+
+    // Convert the data to JSON and log it
+    // console.log('Data fetched from MongoDB:', JSON.stringify(data, null, 2));
+
+    return data;
+  } catch (err) {
+    console.error('Error fetching data from MongoDB:', err.message);
+  } finally {
+    // Close the connection to the database
+    if (client) {
+      client.close();
     }
+  }
 };
 
-// Add initial data to the database
-const addInitialData = async () => {
-    const data = [
-        { name: "Rice", price: 5.99 },
-        { name: "Bread", price: 2.49 },
-        { name: "Pasta", price: 3.99 },
-        { name: "Milk", price: 1.99 },
-        { name: "Eggs", price: 2.99 }
-    ];
-
-    try {
-        await FoodItem.insertMany(data);
-        console.log('Initial data added to the database');
-    } catch (err) {
-        console.error('Error adding data:', err.message);
-    }
-};
-
-// Connect to the database and add initial data
-connectDB().then(() => addInitialData());
+connectDB().then(data => {
+    app.listen(5020, () => {
+      console.log(`Server running on port 5020`);
+    });
+    // console.log('Data processing complete:', data);
+}).catch(err => {
+  console.error('Data processing failed:', err.message);
+});
 
 // API endpoint to fetch data
 app.get('/api/food-items', async (req, res) => {
     try {
-        const foodItems = await FoodItem.find();
+        const client = await MongoClient.connect(mongoURI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        });
+        const database = client.db(DATABASEName);
+        const collection = database.collection(COLLECTIONName);
+
+        // Fetch data from the collection
+        const foodItems = await collection.find({}).toArray();
+
         res.json(foodItems);
+        client.close();
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server Error' });
     }
 });
 
-// Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+// Fetch API data and insert it into MongoDB under a dynamic collection name
+const fetchAndInsertApiData = async () => {
+    // Connect to MongoDB
+    const client = await MongoClient.connect(mongoURI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+
+    const database = client.db(DATABASEName);
+    const collection = database.collection(COLLECTIONNAME2);
+    // const insertData = JSON.stringify(result.dishes, null, 2);
+
+    // console.log('insert data:', insertData);
+    // Insert the fetched data into MongoDB
+    const getResult = await collection.find({}).toArray();
+    console.log(`Data from MongoDB collection '${COLLECTIONNAME2}':`, getResult);
+        client.close();
+    return getResult
+    // Close the MongoDB connection
+
+
+  }
+fetchAndInsertApiData();
+
+
+
